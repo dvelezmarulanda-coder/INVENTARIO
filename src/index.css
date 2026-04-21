@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Print styles for report generation */
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
