@@ -1,11 +1,7 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/react-swc'
 
 export default defineConfig({
-  base: '/proyectos-antigravity/',
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
+    plugins: [react()],
+    base: './',
 })
