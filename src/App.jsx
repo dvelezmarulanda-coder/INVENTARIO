@@ -12,7 +12,8 @@ import {
   Store,
   FileText,
   Download,
-  Upload
+  Upload,
+  Menu
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -21,6 +22,7 @@ export default function App() {
 
   // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState('inventario');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Cargar datos de localStorage o usar arrays vacíos por defecto
   const [products, setProducts] = useState(() => {
@@ -232,43 +234,50 @@ export default function App() {
 
   return (
     <>
-    <div className="flex h-screen bg-gray-50 font-sans text-gray-800 print:hidden">
+    <div className="flex h-screen bg-gray-50 font-sans text-gray-800 print:hidden relative">
       
+      {/* OVERLAY PARA MOBILE (Cierra el sidebar al dar click fuera) */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR (Barra Lateral) */}
-      <div className="w-64 bg-slate-900 text-white flex flex-col shadow-xl">
-        <div className="p-6 flex items-center space-x-3 border-b border-slate-800">
-          <TrendingUp className="w-8 h-8 text-blue-400" />
-          <h1 className="text-xl font-bold tracking-wider">MiNegocio</h1>
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col shadow-xl transition-transform duration-300 transform
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 md:static md:flex
+      `}>
+        <div className="p-6 flex items-center justify-between border-b border-slate-800">
+          <div className="flex items-center space-x-3">
+            <TrendingUp className="w-8 h-8 text-blue-400" />
+            <h1 className="text-xl font-bold tracking-wider">MiNegocio</h1>
+          </div>
+          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden">
+            <X className="w-6 h-6 text-slate-400" />
+          </button>
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          <button 
-            onClick={() => setActiveTab('resumen')}
-            className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${activeTab === 'resumen' ? 'bg-blue-600' : 'hover:bg-slate-800'}`}
-          >
-            <Box className="w-5 h-5" />
-            <span>Resumen</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('vender')}
-            className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${activeTab === 'vender' ? 'bg-blue-600' : 'hover:bg-slate-800'}`}
-          >
-            <Store className="w-5 h-5" />
-            <span>Punto de Venta</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('inventario')}
-            className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${activeTab === 'inventario' ? 'bg-blue-600' : 'hover:bg-slate-800'}`}
-          >
-            <Package className="w-5 h-5" />
-            <span>Inventario</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('historial')}
-            className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${activeTab === 'historial' ? 'bg-blue-600' : 'hover:bg-slate-800'}`}
-          >
-            <History className="w-5 h-5" />
-            <span>Historial de Ventas</span>
-          </button>
+          {[
+            { id: 'resumen', icon: Box, label: 'Resumen' },
+            { id: 'vender', icon: Store, label: 'Punto de Venta' },
+            { id: 'inventario', icon: Package, label: 'Inventario' },
+            { id: 'historial', icon: History, label: 'Historial' },
+          ].map((item) => (
+            <button 
+              key={item.id}
+              onClick={() => {
+                setActiveTab(item.id);
+                setIsSidebarOpen(false);
+              }}
+              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${activeTab === item.id ? 'bg-blue-600' : 'hover:bg-slate-800'}`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </button>
+          ))}
         </nav>
       </div>
 
@@ -276,10 +285,18 @@ export default function App() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Cabecera */}
         <header className="bg-white shadow-sm p-4 flex justify-between items-center z-10">
-          <h2 className="text-2xl font-semibold text-gray-700 capitalize">
-            {activeTab === 'resumen' ? 'Panel General' : activeTab === 'inventario' ? 'Gestión de Inventario' : activeTab === 'vender' ? 'Punto de Venta' : 'Historial de Movimientos'}
-          </h2>
-          <div className="flex space-x-4">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 rounded-md hover:bg-gray-100 md:hidden transition-colors"
+            >
+              <Menu className="w-6 h-6 text-gray-600" />
+            </button>
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-700 capitalize truncate">
+              {activeTab === 'resumen' ? 'Panel General' : activeTab === 'inventario' ? 'Inventario' : activeTab === 'vender' ? 'Ventas' : 'Historial'}
+            </h2>
+          </div>
+          <div className="flex items-center space-x-2 md:space-x-4">
             {activeTab === 'inventario' && (
               <>
                 <input 
@@ -291,17 +308,19 @@ export default function App() {
                 />
                 <button 
                   onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 shadow transition"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white p-2 md:px-4 md:py-2 rounded-lg flex items-center space-x-2 shadow transition"
+                  title="Subir Excel"
                 >
                   <Upload className="w-5 h-5" />
-                  <span>Subir Excel</span>
+                  <span className="hidden md:inline">Subir Excel</span>
                 </button>
                 <button 
                   onClick={() => setIsAddModalOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 shadow transition"
+                  className="bg-blue-600 hover:bg-blue-700 text-white p-2 md:px-4 md:py-2 rounded-lg flex items-center space-x-2 shadow transition"
+                  title="Nuevo Producto"
                 >
                   <Plus className="w-5 h-5" />
-                  <span>Nuevo Producto</span>
+                  <span className="hidden md:inline">Nuevo</span>
                 </button>
               </>
             )}
@@ -314,31 +333,31 @@ export default function App() {
           {/* VISTA: RESUMEN */}
           {activeTab === 'resumen' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                  <div className="p-4 bg-blue-50 text-blue-600 rounded-full">
+                  <div className="p-4 bg-blue-50 text-blue-600 rounded-full shrink-0">
                     <Package className="w-8 h-8" />
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500 font-medium">Total Productos</p>
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-500 font-medium truncate">Total Productos</p>
                     <p className="text-2xl font-bold text-gray-800">{products.length}</p>
                   </div>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                  <div className="p-4 bg-emerald-50 text-emerald-600 rounded-full">
+                  <div className="p-4 bg-emerald-50 text-emerald-600 rounded-full shrink-0">
                     <TrendingUp className="w-8 h-8" />
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500 font-medium">Ingresos por Ventas</p>
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-500 font-medium truncate">Ingresos Ventas</p>
                     <p className="text-2xl font-bold text-gray-800">${totalSalesRevenue.toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                  <div className="p-4 bg-purple-50 text-purple-600 rounded-full">
+                  <div className="p-4 bg-purple-50 text-purple-600 rounded-full shrink-0">
                     <Box className="w-8 h-8" />
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500 font-medium">Valor en Inventario</p>
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-500 font-medium truncate">Valor Inventario</p>
                     <p className="text-2xl font-bold text-gray-800">${totalInventoryValue.toLocaleString()}</p>
                   </div>
                 </div>
@@ -354,15 +373,15 @@ export default function App() {
                 <Search className="w-5 h-5 text-gray-400" />
                 <input 
                   type="text"
-                  placeholder="Buscar producto por referencia..."
+                  placeholder="Buscar producto..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 outline-none text-gray-700 placeholder-gray-400 bg-transparent text-lg"
                 />
               </div>
 
-              {/* Lista de productos filtrados en formato lista alfabética */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              {/* Vista Desktop: Tabla */}
+              <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -409,94 +428,173 @@ export default function App() {
                           </tr>
                         ))
                       }
-                      {products.filter(p => p.reference.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
-                        <tr>
-                          <td colSpan="5" className="py-12 text-center text-gray-500 bg-white">
-                            <Search className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                            <p className="text-lg">No se encontraron productos con esa referencia.</p>
-                          </td>
-                        </tr>
-                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
+
+              {/* Vista Mobile: Cards */}
+              <div className="grid grid-cols-1 gap-4 md:hidden">
+                {products
+                  .filter(p => p.reference.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .sort((a, b) => a.reference.localeCompare(b.reference))
+                  .map(product => (
+                    <div key={product.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-gray-800 text-lg">{product.reference}</div>
+                          <div className="text-gray-500 text-sm">{product.supplier}</div>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.currentUnits > 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                          {product.currentUnits} unds
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+                        <span className="text-xl font-black text-emerald-600">${product.salePrice.toLocaleString()}</span>
+                        <button 
+                          onClick={() => openSellModal(product)}
+                          disabled={product.currentUnits <= 0}
+                          className={`flex items-center space-x-2 px-4 py-2 rounded-lg shadow-sm transition font-bold ${
+                            product.currentUnits > 0 
+                            ? 'bg-blue-600 text-white active:scale-95' 
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          <span>Vender</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+
+              {products.filter(p => p.reference.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                <div className="py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
+                  <Search className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <p className="text-lg">No se encontraron productos.</p>
+                </div>
+              )}
             </div>
           )}
 
           {/* VISTA: INVENTARIO */}
           {activeTab === 'inventario' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm uppercase tracking-wider">
-                      <th className="p-4 font-semibold">Referencia</th>
-                      <th className="p-4 font-semibold">Proveedor</th>
-                      <th className="p-4 font-semibold">Fecha Ingreso</th>
-                      <th className="p-4 font-semibold text-right">P. Compra</th>
-                      <th className="p-4 font-semibold text-right">P. Venta</th>
-                      <th className="p-4 font-semibold text-center">En Inventario</th>
-                      <th className="p-4 font-semibold text-center">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {products.length === 0 ? (
-                      <tr>
-                        <td colSpan="7" className="p-8 text-center text-gray-400">
-                          No hay productos registrados. Haz clic en "Nuevo Producto" para empezar.
-                        </td>
+            <div className="space-y-4">
+              {/* Vista Desktop: Tabla */}
+              <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm uppercase tracking-wider">
+                        <th className="p-4 font-semibold">Referencia</th>
+                        <th className="p-4 font-semibold">Proveedor</th>
+                        <th className="p-4 font-semibold">Fecha Ingreso</th>
+                        <th className="p-4 font-semibold text-right">P. Compra</th>
+                        <th className="p-4 font-semibold text-right">P. Venta</th>
+                        <th className="p-4 font-semibold text-center">Stock</th>
+                        <th className="p-4 font-semibold text-center">Acciones</th>
                       </tr>
-                    ) : (
-                      products.map(product => (
-                        <tr key={product.id} className="hover:bg-gray-50 transition">
-                          <td className="p-4 font-medium text-gray-800">{product.reference}</td>
-                          <td className="p-4 text-gray-600">{product.supplier}</td>
-                          <td className="p-4 text-gray-600">{product.entryDate}</td>
-                          <td className="p-4 text-right text-gray-600">${product.purchasePrice.toLocaleString()}</td>
-                          <td className="p-4 text-right text-emerald-600 font-medium">${product.salePrice.toLocaleString()}</td>
-                          <td className="p-4 text-center">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${product.currentUnits > 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
-                              {product.currentUnits} / {product.initialUnits}
-                            </span>
-                          </td>
-                          <td className="p-4 text-center">
-                            <button 
-                              onClick={() => openSellModal(product)}
-                              disabled={product.currentUnits <= 0}
-                              className={`flex items-center justify-center space-x-1 px-3 py-1.5 rounded shadow-sm mx-auto transition ${
-                                product.currentUnits > 0 
-                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              }`}
-                            >
-                              <ShoppingCart className="w-4 h-4" />
-                              <span>Vender</span>
-                            </button>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {products.length === 0 ? (
+                        <tr>
+                          <td colSpan="7" className="p-8 text-center text-gray-400">
+                            No hay productos registrados.
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        products.map(product => (
+                          <tr key={product.id} className="hover:bg-gray-50 transition">
+                            <td className="p-4 font-medium text-gray-800">{product.reference}</td>
+                            <td className="p-4 text-gray-600">{product.supplier}</td>
+                            <td className="p-4 text-gray-600">{product.entryDate}</td>
+                            <td className="p-4 text-right text-gray-600">${product.purchasePrice.toLocaleString()}</td>
+                            <td className="p-4 text-right text-emerald-600 font-medium">${product.salePrice.toLocaleString()}</td>
+                            <td className="p-4 text-center">
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${product.currentUnits > 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                                {product.currentUnits} / {product.initialUnits}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <button 
+                                onClick={() => openSellModal(product)}
+                                disabled={product.currentUnits <= 0}
+                                className={`flex items-center justify-center space-x-1 px-3 py-1.5 rounded shadow-sm mx-auto transition ${
+                                  product.currentUnits > 0 
+                                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
+                                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                }`}
+                              >
+                                <ShoppingCart className="w-4 h-4" />
+                                <span>Vender</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Vista Mobile: Cards */}
+              <div className="grid grid-cols-1 gap-4 md:hidden">
+                {products.length === 0 ? (
+                  <div className="p-8 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-300">
+                    No hay productos registrados.
+                  </div>
+                ) : (
+                  products.map(product => (
+                    <div key={product.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-gray-800">{product.reference}</div>
+                          <div className="text-gray-500 text-xs">{product.supplier} • {product.entryDate}</div>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.currentUnits > 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                          {product.currentUnits} / {product.initialUnits} unds
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t border-gray-50">
+                        <div>
+                          <span className="text-gray-400 block text-xs">Costo:</span>
+                          <span className="font-medium">${product.purchasePrice.toLocaleString()}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-gray-400 block text-xs">Venta:</span>
+                          <span className="font-bold text-emerald-600">${product.salePrice.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => openSellModal(product)}
+                        disabled={product.currentUnits <= 0}
+                        className={`w-full flex items-center justify-center space-x-2 py-2 rounded-lg transition font-medium ${
+                          product.currentUnits > 0 
+                          ? 'bg-emerald-500 text-white active:scale-95' 
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>Vender</span>
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
 
           {/* VISTA: HISTORIAL */}
           {activeTab === 'historial' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-              <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-wrap gap-4 justify-between items-center">
-                <h3 className="font-semibold text-gray-700 flex items-center">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Clasificar Ventas
-                </h3>
-                <div className="flex items-center space-x-2">
+            <div className="space-y-4">
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                <div className="flex items-center space-x-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0">
                   {['Todas', 'Directa', 'Indirecta'].map(type => (
                     <button
                       key={type}
                       onClick={() => setSalesFilter(type)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
                         salesFilter === type 
                         ? 'bg-blue-600 text-white shadow' 
                         : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
@@ -505,55 +603,91 @@ export default function App() {
                       {type}
                     </button>
                   ))}
-                  <div className="w-px h-8 bg-gray-300 mx-2"></div>
-                  <button 
-                    onClick={() => setIsReportModalOpen(true)}
-                    className="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Generar PDF</span>
-                  </button>
+                </div>
+                <button 
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition shadow-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Reporte PDF</span>
+                </button>
+              </div>
+
+              {/* Vista Desktop: Tabla */}
+              <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm uppercase tracking-wider">
+                        <th className="p-4 font-semibold">Fecha y Hora</th>
+                        <th className="p-4 font-semibold">Referencia</th>
+                        <th className="p-4 font-semibold text-center">Tipo</th>
+                        <th className="p-4 font-semibold text-center">Cant.</th>
+                        <th className="p-4 font-semibold text-right">P. Unitario</th>
+                        <th className="p-4 font-semibold text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filteredSales.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="p-8 text-center text-gray-400">
+                            No hay ventas registradas.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredSales.map(sale => (
+                          <tr key={sale.id} className="hover:bg-gray-50 transition">
+                            <td className="p-4 text-gray-600 text-sm">{sale.date}</td>
+                            <td className="p-4 font-medium text-gray-800">{sale.reference}</td>
+                            <td className="p-4 text-center">
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                                sale.saleType === 'Directa' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
+                              }`}>
+                                {sale.saleType}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center font-medium text-gray-700">{sale.quantity}</td>
+                            <td className="p-4 text-right text-gray-600">${sale.unitPrice.toLocaleString()}</td>
+                            <td className="p-4 text-right font-bold text-emerald-600">${sale.total.toLocaleString()}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-white border-b border-gray-100 text-gray-500 text-sm uppercase tracking-wider">
-                      <th className="p-4 font-semibold">Fecha y Hora</th>
-                      <th className="p-4 font-semibold">Referencia</th>
-                      <th className="p-4 font-semibold text-center">Tipo de Venta</th>
-                      <th className="p-4 font-semibold text-center">Cant.</th>
-                      <th className="p-4 font-semibold text-right">P. Unitario</th>
-                      <th className="p-4 font-semibold text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {filteredSales.length === 0 ? (
-                      <tr>
-                        <td colSpan="6" className="p-8 text-center text-gray-400">
-                          No hay ventas registradas en esta categoría.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredSales.map(sale => (
-                        <tr key={sale.id} className="hover:bg-gray-50 transition">
-                          <td className="p-4 text-gray-600">{sale.date}</td>
-                          <td className="p-4 font-medium text-gray-800">{sale.reference}</td>
-                          <td className="p-4 text-center">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                              sale.saleType === 'Directa' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
-                            }`}>
-                              {sale.saleType}
-                            </span>
-                          </td>
-                          <td className="p-4 text-center font-medium text-gray-700">{sale.quantity}</td>
-                          <td className="p-4 text-right text-gray-600">${sale.unitPrice.toLocaleString()}</td>
-                          <td className="p-4 text-right font-bold text-emerald-600">${sale.total.toLocaleString()}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+
+              {/* Vista Mobile: Cards */}
+              <div className="grid grid-cols-1 gap-4 md:hidden">
+                {filteredSales.length === 0 ? (
+                  <div className="p-8 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-300">
+                    No hay ventas registradas.
+                  </div>
+                ) : (
+                  filteredSales.map(sale => (
+                    <div key={sale.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-gray-800">{sale.reference}</div>
+                          <div className="text-gray-500 text-xs">{sale.date}</div>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                          sale.saleType === 'Directa' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {sale.saleType}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-end pt-2 border-t border-gray-50">
+                        <div className="text-sm text-gray-600">
+                          {sale.quantity} x ${sale.unitPrice.toLocaleString()}
+                        </div>
+                        <div className="text-xl font-black text-emerald-600">
+                          ${sale.total.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -563,48 +697,48 @@ export default function App() {
 
       {/* MODAL: AÑADIR PRODUCTO */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h3 className="text-xl font-bold text-gray-800">Registrar Nuevo Producto al Inventario</h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-red-500 transition">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-0 sm:p-4">
+          <div className="bg-white rounded-none sm:rounded-2xl shadow-2xl w-full max-w-2xl h-full sm:h-auto overflow-y-auto">
+            <div className="p-4 sm:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">Nuevo Producto</h3>
+              <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-red-500 transition p-2">
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleAddProduct} className="p-6">
+            <form onSubmit={handleAddProduct} className="p-4 sm:p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Referencia del Producto *</label>
-                  <input required name="reference" type="text" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Ej: Zapatos Nike Mod 1" />
+                  <label className="text-sm font-medium text-gray-700">Referencia *</label>
+                  <input required name="reference" type="text" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Ej: Zapatos Nike" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700">Proveedor *</label>
-                  <input required name="supplier" type="text" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Ej: Distribuidora Central" />
+                  <input required name="supplier" type="text" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Ej: Distribuidora" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Precio de Compra ($) *</label>
-                  <input required name="purchasePrice" type="number" step="0.01" min="0" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="0.00" />
+                  <label className="text-sm font-medium text-gray-700">Precio Compra ($) *</label>
+                  <input required name="purchasePrice" type="number" step="0.01" min="0" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="0.00" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Precio de Venta ($) *</label>
-                  <input required name="salePrice" type="number" step="0.01" min="0" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="0.00" />
+                  <label className="text-sm font-medium text-gray-700">Precio Venta ($) *</label>
+                  <input required name="salePrice" type="number" step="0.01" min="0" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="0.00" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Unidades Compradas *</label>
-                  <input required name="units" type="number" min="1" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Cantidad que entra al inventario" />
+                  <label className="text-sm font-medium text-gray-700">Stock Inicial *</label>
+                  <input required name="units" type="number" min="1" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Cantidad" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Fecha de Ingreso *</label>
-                  <input required name="entryDate" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+                  <label className="text-sm font-medium text-gray-700">Fecha *</label>
+                  <input required name="entryDate" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" />
                 </div>
               </div>
-              <div className="mt-8 flex justify-end space-x-3">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+              <div className="mt-8 flex flex-col-reverse sm:flex-row justify-end gap-3">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="w-full sm:w-auto px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
                   Cancelar
                 </button>
-                <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition font-medium flex items-center">
+                <button type="submit" className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition font-bold flex items-center justify-center">
                   <Plus className="w-5 h-5 mr-1" />
-                  Guardar Producto
+                  Guardar
                 </button>
               </div>
             </form>
@@ -612,35 +746,34 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL: VENDER PRODUCTO (Aquí está la pregunta clave) */}
+      {/* MODAL: VENDER PRODUCTO */}
       {isSellModalOpen && productToSell && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-md overflow-hidden transform transition-all">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50">
-              <h3 className="text-xl font-bold text-blue-900 flex items-center">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-0 sm:p-4">
+          <div className="bg-white rounded-none sm:rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-4 sm:p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50">
+              <h3 className="text-lg sm:text-xl font-bold text-blue-900 flex items-center">
                 <ShoppingCart className="w-6 h-6 mr-2" />
                 Nueva Venta
               </h3>
-              <button onClick={() => setIsSellModalOpen(false)} className="text-blue-400 hover:text-blue-700 transition">
+              <button onClick={() => setIsSellModalOpen(false)} className="text-blue-400 hover:text-blue-700 transition p-2">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
-            <form onSubmit={handleSellProduct} className="p-6 space-y-6">
-              
+            <form onSubmit={handleSellProduct} className="p-4 sm:p-6 space-y-6">
               {/* Info del producto */}
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-sm text-gray-500">Producto a vender:</p>
-                <p className="font-bold text-lg text-gray-800">{productToSell.reference}</p>
+                <p className="text-sm text-gray-500">Producto:</p>
+                <p className="font-bold text-lg text-gray-800 truncate">{productToSell.reference}</p>
                 <div className="flex justify-between mt-2 text-sm">
-                  <span className="text-gray-600">Disp: <strong className="text-blue-600">{productToSell.currentUnits} unds</strong></span>
+                  <span className="text-gray-600">Stock: <strong className="text-blue-600">{productToSell.currentUnits}</strong></span>
                   <span className="text-gray-600">Precio: <strong className="text-emerald-600">${productToSell.salePrice.toLocaleString()}</strong></span>
                 </div>
               </div>
 
               {/* Cantidad a vender */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700">¿Cuántas unidades vas a vender?</label>
+                <label className="text-sm font-bold text-gray-700">Cantidad</label>
                 <input 
                   required 
                   name="quantity" 
@@ -648,40 +781,38 @@ export default function App() {
                   min="1" 
                   max={productToSell.currentUnits}
                   defaultValue="1"
-                  className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-0 focus:border-blue-500 text-lg outline-none transition" 
+                  className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 text-lg outline-none transition" 
                 />
               </div>
 
-              {/* LA PREGUNTA IMPORTANTE: Directa o Indirecta */}
+              {/* Tipo de Venta */}
               <div className="space-y-3 pt-2 border-t border-gray-100">
-                <label className="text-base font-bold text-gray-800 block">Tipo de Venta (Requerido):</label>
+                <label className="text-sm font-bold text-gray-800 block">Tipo de Venta:</label>
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm hover:border-gray-300 hover:bg-gray-50 focus:outline-none border-gray-200">
+                  <label className="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm hover:bg-gray-50 border-gray-200">
                     <input type="radio" name="saleType" value="Directa" required className="sr-only peer" />
                     <div className="peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 absolute inset-0 rounded-lg border-2 border-transparent pointer-events-none"></div>
                     <div className="flex flex-col text-center w-full">
                       <span className="font-bold text-gray-900">Directa</span>
-                      <span className="text-xs text-gray-500 mt-1">Venta al cliente final</span>
                     </div>
                   </label>
 
-                  <label className="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm hover:border-gray-300 hover:bg-gray-50 focus:outline-none border-gray-200">
+                  <label className="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm hover:bg-gray-50 border-gray-200">
                     <input type="radio" name="saleType" value="Indirecta" required className="sr-only peer" />
                     <div className="peer-checked:border-orange-500 peer-checked:ring-1 peer-checked:ring-orange-500 absolute inset-0 rounded-lg border-2 border-transparent pointer-events-none"></div>
                     <div className="flex flex-col text-center w-full">
                       <span className="font-bold text-gray-900">Indirecta</span>
-                      <span className="text-xs text-gray-500 mt-1">A través de terceros</span>
                     </div>
                   </label>
                 </div>
               </div>
 
-              <div className="mt-8 flex justify-end space-x-3 pt-4">
-                <button type="button" onClick={() => setIsSellModalOpen(false)} className="w-full px-5 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
-                  Cancelar
-                </button>
-                <button type="submit" className="w-full px-5 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 shadow-md transition font-bold text-lg flex justify-center items-center">
+              <div className="mt-8 flex flex-col gap-3 pt-4">
+                <button type="submit" className="w-full px-5 py-4 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 shadow-md transition font-bold text-lg flex justify-center items-center">
                   Confirmar Venta
+                </button>
+                <button type="button" onClick={() => setIsSellModalOpen(false)} className="w-full px-5 py-3 text-gray-500 rounded-lg hover:bg-gray-50 transition font-medium">
+                  Cancelar
                 </button>
               </div>
             </form>
