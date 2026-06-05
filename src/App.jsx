@@ -61,6 +61,7 @@ const formatCOP = (num) => {
 
 export default function App() {
   const fileInputRef = useRef(null);
+  const backupFileInputRef = useRef(null);
 
   // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState('inventario');
@@ -134,6 +135,51 @@ export default function App() {
   }, [reportData]);
 
   // --- FUNCIONES ---
+  const exportBackup = () => {
+    try {
+      const dataStr = JSON.stringify({ products, sales }, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `respaldo_negocio_${new Date().toISOString().split('T')[0]}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    } catch (err) {
+      console.error("Error al exportar copia de seguridad:", err);
+      alert("No se pudo exportar la copia de seguridad.");
+    }
+  };
+
+  const importBackup = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = JSON.parse(evt.target.result);
+        if (data && Array.isArray(data.products) && Array.isArray(data.sales)) {
+          if (window.confirm('¿Estás seguro de que deseas importar esta copia de seguridad? Esto reemplazará todos los productos y ventas actuales.')) {
+            setProducts(data.products);
+            setSales(data.sales);
+            alert('Copia de seguridad importada con éxito.');
+          }
+        } else {
+          alert('El archivo no tiene el formato de copia de seguridad correcto.');
+        }
+      } catch (error) {
+        console.error("Error al importar el archivo JSON:", error);
+        alert("Ocurrió un error al leer el archivo de copia de seguridad. Asegúrate de que sea un archivo JSON válido.");
+      }
+    };
+    reader.readAsText(file);
+    if (backupFileInputRef.current) {
+      backupFileInputRef.current.value = '';
+    }
+  };
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -587,6 +633,32 @@ export default function App() {
             </button>
           ))}
         </nav>
+        
+        {/* Footer del Sidebar con Copia de Seguridad */}
+        <div className="p-4 border-t border-slate-800 space-y-2">
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider px-2">Copia de Seguridad</p>
+          <button 
+            onClick={exportBackup}
+            className="w-full flex items-center space-x-2 p-2 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-blue-400" />
+            <span>Exportar Copia (.json)</span>
+          </button>
+          <button 
+            onClick={() => backupFileInputRef.current && backupFileInputRef.current.click()}
+            className="w-full flex items-center space-x-2 p-2 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+          >
+            <Upload className="w-4 h-4 text-sky-400" />
+            <span>Importar Copia (.json)</span>
+          </button>
+          <input 
+            type="file" 
+            accept=".json" 
+            ref={backupFileInputRef} 
+            onChange={importBackup} 
+            className="hidden" 
+          />
+        </div>
       </div>
 
       {/* CONTENIDO PRINCIPAL */}
