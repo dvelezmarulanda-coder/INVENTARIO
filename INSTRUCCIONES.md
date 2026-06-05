@@ -37,6 +37,22 @@ Para facilitarle el uso al cliente, hemos creado un acceso directo inteligente l
    * Se abrirá automáticamente el navegador de internet mostrando la aplicación en la dirección: **`http://localhost:5173/`**
    * Se abrirá una ventana negra de consola. **Es importante mantener esta ventana abierta** mientras se use la aplicación. Al terminar de trabajar, simplemente se puede cerrar la ventana de consola para apagar el programa.
 
+### Crear un Acceso Directo en el Escritorio con Icono Personalizado
+
+Para que el cliente tenga un icono en su Escritorio y pueda abrir la aplicación directamente todos los días:
+
+1. **Crear el acceso directo:**
+   * En la carpeta del proyecto, haz clic derecho sobre el archivo `iniciar.bat`.
+   * Selecciona **Enviar a** -> **Escritorio (crear acceso directo)**.
+2. **Cambiar el Nombre:**
+   * Ve al Escritorio de la PC, busca el archivo creado llamado `iniciar.bat - acceso directo`.
+   * Haz clic derecho, selecciona **Cambiar nombre** y renómbralo a **MiNegocio** o el nombre de tu aplicación.
+3. **Ponerle un Icono Personalizado:**
+   * Haz clic derecho sobre el acceso directo en el Escritorio y selecciona **Propiedades**.
+   * En la pestaña *Acceso directo*, haz clic en el botón **Cambiar icono...**
+   * Haz clic en **Examinar...** y selecciona cualquier archivo de icono con extensión `.ico` (puedes guardar un archivo `.ico` en la carpeta del proyecto y seleccionarlo desde allí).
+   * Haz clic en *Aceptar* y luego en *Aplicar*.
+
 ---
 
 ## 3. Control y Respaldo de los Datos (¡MUY IMPORTANTE!)
