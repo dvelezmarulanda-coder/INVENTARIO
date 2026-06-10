@@ -117,6 +117,7 @@ export default function App() {
   // Estados para Reporte
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportData, setReportData] = useState(null);
+  const [receiptData, setReceiptData] = useState(null);
 
   // --- EFECTOS (Guardar en LocalStorage) ---
   useEffect(() => {
@@ -128,14 +129,15 @@ export default function App() {
   }, [sales]);
 
   useEffect(() => {
-    if (reportData) {
+    if (reportData || receiptData) {
       const timer = setTimeout(() => {
         window.print();
-        setReportData(null);
+        if (reportData) setReportData(null);
+        if (receiptData) setReceiptData(null);
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [reportData]);
+  }, [reportData, receiptData]);
 
   // --- FUNCIONES ---
   const exportBackup = () => {
@@ -444,6 +446,10 @@ export default function App() {
       isoDate: new Date().toISOString(), // Para facilitar filtros por mes
     };
     setSales([newSale, ...sales]);
+
+    if (saleType === 'Indirecta') {
+      setReceiptData({ ...newSale, laborCost: productToSell.laborCost || 0 });
+    }
 
     // Cerrar modal
     setIsSellModalOpen(false);
@@ -1942,6 +1948,48 @@ export default function App() {
       })()}
 
     </div>
+
+    {/* RECIBO POS (Para ventas Indirectas) */}
+    {receiptData && (
+      <div className="hidden print:block font-mono text-black mx-auto" style={{ width: '300px', padding: '10px 0', fontSize: '12px', lineHeight: '1.4' }}>
+        <div className="text-center mb-4 border-b border-black pb-2 border-dashed">
+          <h2 className="text-2xl font-black uppercase mb-1">MiNegocio</h2>
+          <p className="text-xs">Comprobante de Venta</p>
+          <p className="text-xs">{receiptData.date}</p>
+        </div>
+        
+        <div className="mb-4">
+          <p className="font-bold border-b border-black border-dashed mb-1">CANT. DESCRIPCIÓN</p>
+          <div className="flex justify-between items-start my-2">
+            <span className="w-8 text-left">{receiptData.quantity}</span>
+            <span className="flex-1 px-1 font-bold">{receiptData.reference}</span>
+            <span className="text-right">{formatCOP(receiptData.unitPrice)}</span>
+          </div>
+        </div>
+
+        <div className="border-t border-black border-dashed pt-2 space-y-1">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal:</span>
+            <span>{formatCOP(receiptData.total)}</span>
+          </div>
+          {receiptData.laborCost > 0 && (
+            <div className="flex justify-between text-sm">
+              <span>Mano de Obra:</span>
+              <span>{formatCOP(receiptData.laborCost)}</span>
+            </div>
+          )}
+          <div className="flex justify-between font-black text-base mt-2 border-t border-black pt-1">
+            <span>TOTAL:</span>
+            <span>{formatCOP(receiptData.total + (receiptData.laborCost > 0 ? receiptData.laborCost : 0))}</span>
+          </div>
+        </div>
+
+        <div className="text-center mt-6 text-[10px] border-t border-black border-dashed pt-2">
+          <p>¡Gracias por su compra!</p>
+          <p className="uppercase mt-1">Venta {receiptData.saleType}</p>
+        </div>
+      </div>
+    )}
 
     {/* PLANTILLA DE IMPRESIÓN (Solo visible al generar el reporte PDF) */}
     {reportData && (
