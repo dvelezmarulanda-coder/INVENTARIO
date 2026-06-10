@@ -306,6 +306,7 @@ export default function App() {
       initialUnits: parseInt(formData.get('units')),
       currentUnits: parseInt(formData.get('units')), // Al inicio, inventario = compradas
       minStock: parseInt(formData.get('minStock')) || 0, // Stock mínimo para alertas
+      laborCost: parseFloat(formData.get('laborCost')) || 0, // Mano de obra sugerida
       supplier: formData.get('supplier'),
       entryDate: formData.get('entryDate'),
       docNumber: String(formData.get('docNumber') || '').trim(), // Guardar # de doc
@@ -1559,6 +1560,10 @@ export default function App() {
                   <input required name="minStock" type="number" min="0" defaultValue="5" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Cant. mínima" />
                 </div>
                 <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Mano de Obra ($) (Opcional)</label>
+                  <input name="laborCost" type="number" step="0.01" min="0" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Ej: 15000" />
+                </div>
+                <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700"># de Doc. (Factura / Proveedor)</label>
                   <input name="docNumber" type="text" className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Ej: FAC-12345" />
                 </div>
@@ -1609,6 +1614,14 @@ export default function App() {
                   <span className="text-gray-600">Stock: <strong className="text-blue-600">{productToSell.currentUnits}</strong></span>
                   <span className="text-gray-600">Precio: <strong className="text-blue-600">{formatCOP(productToSell.salePrice)}</strong></span>
                 </div>
+                {productToSell.laborCost > 0 && (
+                  <div className="mt-2 text-sm border-t border-gray-200 pt-2">
+                    <span className="text-gray-600 flex items-center">
+                      <span className="font-bold text-orange-600 mr-2">Mano de Obra Sugerida:</span>
+                      {formatCOP(productToSell.laborCost)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Cantidad a vender */}
@@ -1837,10 +1850,20 @@ export default function App() {
         const totalProfit = totalRevenue - totalCost;
         const totalUnits = todaysSales.reduce((acc, s) => acc + s.quantity, 0);
 
+        const productsSold = {};
+        todaysSales.forEach(s => {
+          if (productsSold[s.reference]) {
+            productsSold[s.reference] += s.quantity;
+          } else {
+            productsSold[s.reference] = s.quantity;
+          }
+        });
+        const productsSoldArray = Object.entries(productsSold).sort((a, b) => b[1] - a[1]);
+
         return (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 print:hidden backdrop-blur-sm transition-opacity">
-            <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-fadeIn scale-100">
-              <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-emerald-600 text-white">
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-fadeIn scale-100 flex flex-col max-h-[90vh]">
+              <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-emerald-600 text-white shrink-0">
                 <div className="flex items-center space-x-3">
                   <Calculator className="w-6 h-6 text-emerald-100" />
                   <h3 className="text-xl font-extrabold tracking-tight">Cierre de Caja del Día</h3>
@@ -1849,13 +1872,13 @@ export default function App() {
                   <X className="w-6 h-6" />
                 </button>
               </div>
-              <div className="p-8">
-                <div className="text-center mb-8">
+              <div className="p-6 overflow-y-auto">
+                <div className="text-center mb-6">
                   <p className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-2">Fecha de Cierre</p>
                   <p className="text-2xl font-black text-gray-900 bg-gray-50 inline-block px-4 py-2 rounded-lg border border-gray-100">{todayDateStr}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
                     <p className="text-emerald-600 text-xs font-bold uppercase tracking-wider mb-1">Total Ventas</p>
                     <p className="text-2xl font-black text-emerald-700">{formatCOP(totalRevenue)}</p>
@@ -1876,7 +1899,22 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 mt-4">
+                {productsSoldArray.length > 0 && (
+                  <div className="mb-2 bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">Productos Vendidos</p>
+                    <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                      {productsSoldArray.map(([ref, qty]) => (
+                        <div key={ref} className="flex justify-between items-center text-sm py-1.5 border-b border-gray-50 last:border-0">
+                          <span className="text-gray-700 font-medium truncate pr-3" title={ref}>{ref}</span>
+                          <span className="font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded shrink-0">{qty}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="p-6 border-t border-gray-100 bg-gray-50 shrink-0">
+                <div className="flex items-center space-x-3">
                   <button type="button" onClick={() => setIsCierreModalOpen(false)} className="flex-1 px-5 py-3 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition font-bold text-center">
                     Cerrar
                   </button>
