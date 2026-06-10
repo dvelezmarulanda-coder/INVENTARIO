@@ -4,6 +4,9 @@ echo ========================================================
 echo               INICIANDO APLICACION MINEGOCIO
 echo ========================================================
 echo.
+echo Verificando e instalando dependencias (por favor espere si es la primera vez)...
+call npm install --no-fund --no-audit
+echo.
 echo 1. Abriendo la aplicacion en el navegador...
 echo 2. Iniciando servidor local...
 echo.

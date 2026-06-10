@@ -17,7 +17,9 @@ import {
   Eye,
   EyeOff,
   AlertTriangle,
-  Bell
+  Bell,
+  Calculator,
+  Printer
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -91,6 +93,7 @@ export default function App() {
   // Estados para Modales
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
+  const [isCierreModalOpen, setIsCierreModalOpen] = useState(false);
   const [productToSell, setProductToSell] = useState(null);
 
   // Filtro de historial
@@ -677,6 +680,16 @@ export default function App() {
             </h2>
           </div>
           <div className="flex items-center space-x-2 md:space-x-4">
+            {activeTab === 'vender' && (
+              <button 
+                onClick={() => setIsCierreModalOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white p-2 md:px-4 md:py-2 rounded-lg flex items-center space-x-2 shadow transition"
+                title="Cierre de Caja"
+              >
+                <Calculator className="w-5 h-5" />
+                <span className="hidden md:inline">Cierre de Caja</span>
+              </button>
+            )}
             {activeTab === 'inventario' && (
               <>
                 <input 
@@ -1807,6 +1820,88 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* MODAL DE CIERRE DE CAJA */}
+      {isCierreModalOpen && (() => {
+        const todayDateStr = new Date().toLocaleDateString();
+        // Filtrar ventas de hoy
+        const todaysSales = sales.filter(s => s.date.startsWith(todayDateStr));
+        
+        const totalRevenue = todaysSales.reduce((acc, s) => acc + s.total, 0);
+        const totalCost = todaysSales.reduce((acc, s) => {
+          if (s.unitCost !== undefined) return acc + (s.quantity * s.unitCost);
+          const product = products.find(p => p.id === s.productId);
+          const itemCost = product ? product.purchasePrice : 0;
+          return acc + (s.quantity * itemCost);
+        }, 0);
+        const totalProfit = totalRevenue - totalCost;
+        const totalUnits = todaysSales.reduce((acc, s) => acc + s.quantity, 0);
+
+        return (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 print:hidden backdrop-blur-sm transition-opacity">
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-fadeIn scale-100">
+              <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-emerald-600 text-white">
+                <div className="flex items-center space-x-3">
+                  <Calculator className="w-6 h-6 text-emerald-100" />
+                  <h3 className="text-xl font-extrabold tracking-tight">Cierre de Caja del Día</h3>
+                </div>
+                <button onClick={() => setIsCierreModalOpen(false)} className="text-emerald-100 hover:text-white transition p-2 hover:bg-emerald-700 rounded-full">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="p-8">
+                <div className="text-center mb-8">
+                  <p className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-2">Fecha de Cierre</p>
+                  <p className="text-2xl font-black text-gray-900 bg-gray-50 inline-block px-4 py-2 rounded-lg border border-gray-100">{todayDateStr}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
+                    <p className="text-emerald-600 text-xs font-bold uppercase tracking-wider mb-1">Total Ventas</p>
+                    <p className="text-2xl font-black text-emerald-700">{formatCOP(totalRevenue)}</p>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
+                    <p className="text-blue-600 text-xs font-bold uppercase tracking-wider mb-1">Ganancia Neta</p>
+                    <p className="text-2xl font-black text-blue-700">{formatCOP(totalProfit)}</p>
+                  </div>
+                  <div className="col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-100 text-center flex justify-center space-x-8">
+                    <div>
+                      <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Unidades Vendidas</p>
+                      <p className="text-xl font-black text-gray-800">{totalUnits}</p>
+                    </div>
+                    <div className="border-l border-gray-200 pl-8">
+                      <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Transacciones</p>
+                      <p className="text-xl font-black text-gray-800">{todaysSales.length}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 mt-4">
+                  <button type="button" onClick={() => setIsCierreModalOpen(false)} className="flex-1 px-5 py-3 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition font-bold text-center">
+                    Cerrar
+                  </button>
+                  <button type="button" onClick={() => {
+                    setReportData({
+                      month: `(Cierre del Día) ${todayDateStr}`,
+                      type: 'Todas',
+                      sales: todaysSales,
+                      totalRevenue,
+                      totalUnits,
+                      totalCost,
+                      totalProfit
+                    });
+                    setIsCierreModalOpen(false);
+                    setTimeout(() => window.print(), 300);
+                  }} className="flex-1 px-5 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-md transition font-bold flex justify-center items-center">
+                    <Printer className="w-5 h-5 mr-2" />
+                    Imprimir Resumen
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
 
