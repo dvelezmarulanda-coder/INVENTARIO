@@ -737,10 +737,10 @@ export default function App() {
           
           {/* VISTA: RESUMEN */}
           {activeTab === 'resumen' && (
-            <div className="space-y-6">
+            <div className="flex flex-col h-full space-y-4">
               
               {/* Barra de Control de Filtros y Visibilidad */}
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
                 <div className="flex items-center space-x-3">
                   <span className="text-gray-600 font-semibold text-sm">Analizar Período:</span>
                   <input 
@@ -875,10 +875,10 @@ export default function App() {
                 });
 
                 return (
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mt-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 min-h-0 mt-2">
                     
                     {/* Gráfica de Rendimiento */}
-                    <div className="lg:col-span-7 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition duration-300">
+                    <div className="lg:col-span-7 bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition duration-300">
                       <div>
                         {/* Header con toggle */}
                         <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
@@ -905,8 +905,7 @@ export default function App() {
 
                         {/* Gráfica de Barras Verticales — Plano Cartesiano */}
                         {(() => {
-                          const chartHeight = 300;
-                          const maxBarHeight = chartHeight * 0.82; // Espacio superior libre para etiquetas de valor
+                          const maxBarHeight = 82; // 82% Espacio superior libre para etiquetas de valor
                           
                           // Cálculo dinámico de escala en pasos de 500.000 COP
                           const baseStep = 500000;
@@ -924,19 +923,19 @@ export default function App() {
                           const steps = Array.from({ length: gridLines + 1 }, (_, i) => i);
 
                           return (
-                            <div className="flex">
+                            <div className="flex flex-1 min-h-[150px] mt-2">
                               {/* Eje Y — escala */}
-                              <div className="flex flex-col justify-between items-end pr-3 shrink-0" style={{ height: `${chartHeight}px` }}>
+                              <div className="flex flex-col justify-between items-end pr-3 shrink-0 h-full">
                                 {[...steps].reverse().map((i) => {
                                   const val = step * i;
                                   return (
-                                    <span key={i} className="text-[11px] font-bold text-gray-500 leading-none">{formatCOP(val)}</span>
+                                    <span key={i} className="text-[10px] font-bold text-gray-500 leading-none">{formatCOP(val)}</span>
                                   );
                                 })}
                               </div>
 
                               {/* Área del gráfico */}
-                              <div className="flex-1 relative" style={{ height: `${chartHeight}px` }}>
+                              <div className="flex-1 relative h-full">
                                 {/* Líneas horizontales de la cuadrícula */}
                                 {steps.slice(0, -1).map((i) => (
                                   <div
@@ -959,25 +958,25 @@ export default function App() {
                                     const displayPrevious = group.isCurrency ? formatCOP(group.previous) : group.previous.toLocaleString('es-CO');
 
                                     return (
-                                      <div key={group.label} className="flex flex-col items-center">
+                                      <div key={group.label} className="flex flex-col items-center h-full justify-end">
                                         {/* Badge variación */}
                                         <div className="mb-1">{renderVariationBadge(group.current, group.previous)}</div>
                                         {/* Par de barras */}
-                                        <div className="flex items-end space-x-1">
+                                        <div className="flex items-end space-x-1 h-full">
                                           {/* Barra anterior */}
-                                          <div className="flex flex-col items-center">
-                                            <span className="text-xs sm:text-[13px] font-bold text-gray-400 mb-0.5 max-w-[85px] truncate text-center">{displayPrevious}</span>
+                                          <div className="flex flex-col items-center h-full justify-end">
+                                            <span className="text-[10px] sm:text-xs font-bold text-gray-400 mb-0.5 max-w-[85px] truncate text-center">{displayPrevious}</span>
                                             <div
-                                              className={`w-9 sm:w-11 rounded-t transition-all duration-700 ease-out ${group.colorB}`}
-                                              style={{ height: `${Math.max(previousH, 4)}px` }}
+                                              className={`w-7 sm:w-9 rounded-t transition-all duration-700 ease-out ${group.colorB}`}
+                                              style={{ height: `${Math.max(previousH, 4)}%` }}
                                             />
                                           </div>
                                           {/* Barra actual */}
-                                          <div className="flex flex-col items-center">
-                                            <span className="text-xs sm:text-[14px] font-black text-slate-900 mb-0.5 max-w-[85px] truncate text-center">{displayCurrent}</span>
+                                          <div className="flex flex-col items-center h-full justify-end">
+                                            <span className="text-[10px] sm:text-xs font-black text-slate-900 mb-0.5 max-w-[85px] truncate text-center">{displayCurrent}</span>
                                             <div
-                                              className={`w-9 sm:w-11 rounded-t transition-all duration-700 ease-out ${group.colorA}`}
-                                              style={{ height: `${Math.max(currentH, 4)}px` }}
+                                              className={`w-7 sm:w-9 rounded-t transition-all duration-700 ease-out ${group.colorA}`}
+                                              style={{ height: `${Math.max(currentH, 4)}%` }}
                                             />
                                           </div>
                                         </div>
@@ -991,7 +990,7 @@ export default function App() {
                         })()}
 
                         {/* Labels del eje X */}
-                        <div className="flex mt-2">
+                        <div className="flex mt-2 shrink-0">
                           <div className="w-[80px] shrink-0" />
                           <div className="flex-1 flex justify-evenly">
                             {groups.map((group) => (
@@ -1015,9 +1014,9 @@ export default function App() {
                     </div>
 
                     {/* Bloque de Alertas de Stock */}
-                    <div className="lg:col-span-5 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition duration-300">
-                      <div className="flex-1 flex flex-col h-full">
-                        <div className="flex items-center space-x-3 mb-4 border-b border-gray-100 pb-3">
+                    <div className="lg:col-span-5 bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition duration-300 overflow-hidden">
+                      <div className="flex-1 flex flex-col h-full min-h-0">
+                        <div className="flex items-center space-x-3 mb-3 border-b border-gray-100 pb-2 shrink-0">
                           <div className={`p-2 rounded-lg ${lowStockProducts.length > 0 ? 'bg-blue-50 text-blue-600 animate-pulse' : 'bg-blue-50 text-blue-600'}`}>
                             {lowStockProducts.length > 0 ? <AlertTriangle className="w-5 h-5 animate-bounce" /> : <Bell className="w-5 h-5" />}
                           </div>
