@@ -737,7 +737,7 @@ export default function App() {
           
           {/* VISTA: RESUMEN */}
           {activeTab === 'resumen' && (
-            <div className="flex flex-col h-full space-y-4">
+            <div className="flex flex-col min-h-full space-y-4">
               
               {/* Barra de Control de Filtros y Visibilidad */}
               <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
@@ -923,7 +923,7 @@ export default function App() {
                           const steps = Array.from({ length: gridLines + 1 }, (_, i) => i);
 
                           return (
-                            <div className="flex flex-1 min-h-[150px] mt-2">
+                            <div className="flex flex-1 min-h-[230px] mt-2">
                               {/* Eje Y — escala */}
                               <div className="flex flex-col justify-between items-end pr-3 shrink-0 h-full">
                                 {[...steps].reverse().map((i) => {
