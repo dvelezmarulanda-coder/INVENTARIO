@@ -779,28 +779,28 @@ export default function App() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 
                 {/* Tarjeta: Ingresos Ventas (Filtrado o Global) */}
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-md transition duration-300">
-                  <div className="p-4 bg-blue-50 text-blue-600 rounded-full shrink-0">
-                    <TrendingUp className="w-8 h-8" />
+                <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-3 hover:shadow-md transition duration-300">
+                  <div className="p-2.5 bg-blue-50 text-blue-600 rounded-full shrink-0">
+                    <TrendingUp className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-500 font-medium truncate metrics-card-title">
+                    <p className="text-xs text-gray-500 font-medium truncate metrics-card-title">
                       {showFinancials ? `Ingresos (${formatMonthYear(selectedMonth)})` : 'Ingresos Totales'}
                     </p>
-                    <p className="text-2xl font-bold text-gray-800 metrics-card-value">
+                    <p className="text-lg sm:text-xl font-bold text-gray-800 metrics-card-value">
                       {showFinancials ? formatCOP(statsM1.revenue) : formatCOP(totalSalesRevenue)}
                     </p>
                   </div>
                 </div>
 
                 {/* Tarjeta: Valor Inventario */}
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-md transition duration-300">
-                  <div className="p-4 bg-blue-50 text-blue-600 rounded-full shrink-0">
-                    <Box className="w-8 h-8" />
+                <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-3 hover:shadow-md transition duration-300">
+                  <div className="p-2.5 bg-blue-50 text-blue-600 rounded-full shrink-0">
+                    <Box className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-500 font-medium truncate metrics-card-title">Valor Inventario (Actual)</p>
-                    <p className="text-2xl font-bold text-gray-800 metrics-card-value">{formatCOP(totalInventoryValue)}</p>
+                    <p className="text-xs text-gray-500 font-medium truncate metrics-card-title">Valor Inventario (Actual)</p>
+                    <p className="text-lg sm:text-xl font-bold text-gray-800 metrics-card-value">{formatCOP(totalInventoryValue)}</p>
                   </div>
                 </div>
 
@@ -808,35 +808,35 @@ export default function App() {
                 {showFinancials && (
                   <>
                     {/* Costo de Ventas */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-md transition duration-300 animate-fadeIn">
-                      <div className="p-4 bg-blue-50 text-blue-600 rounded-full shrink-0">
-                        <ShoppingCart className="w-8 h-8" />
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-3 hover:shadow-md transition duration-300 animate-fadeIn">
+                      <div className="p-2.5 bg-blue-50 text-blue-600 rounded-full shrink-0">
+                        <ShoppingCart className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm text-gray-500 font-medium truncate metrics-card-title">Costo de Ventas ({formatMonthYear(selectedMonth)})</p>
-                        <p className="text-2xl font-bold text-gray-800 metrics-card-value">{formatCOP(statsM1.cost)}</p>
+                        <p className="text-xs text-gray-500 font-medium truncate metrics-card-title">Costo de Ventas ({formatMonthYear(selectedMonth)})</p>
+                        <p className="text-lg sm:text-xl font-bold text-gray-800 metrics-card-value">{formatCOP(statsM1.cost)}</p>
                       </div>
                     </div>
 
                     {/* Ganancia Neta */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-md transition duration-300 animate-fadeIn">
-                      <div className="p-4 bg-blue-50 text-blue-600 rounded-full shrink-0">
-                        <TrendingUp className="w-8 h-8" />
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-3 hover:shadow-md transition duration-300 animate-fadeIn">
+                      <div className="p-2.5 bg-blue-50 text-blue-600 rounded-full shrink-0">
+                        <TrendingUp className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm text-gray-500 font-medium truncate metrics-card-title">Ganancia Neta ({formatMonthYear(selectedMonth)})</p>
-                        <p className="text-2xl font-bold text-gray-800 metrics-card-value">{formatCOP(statsM1.profit)}</p>
+                        <p className="text-xs text-gray-500 font-medium truncate metrics-card-title">Ganancia Neta ({formatMonthYear(selectedMonth)})</p>
+                        <p className="text-lg sm:text-xl font-bold text-gray-800 metrics-card-value">{formatCOP(statsM1.profit)}</p>
                       </div>
                     </div>
 
                     {/* Margen de Ganancia Promedio */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-md transition duration-300 animate-fadeIn">
-                      <div className="p-4 bg-blue-50 text-blue-600 rounded-full shrink-0">
-                        <FileText className="w-8 h-8" />
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex items-center space-x-3 hover:shadow-md transition duration-300 animate-fadeIn">
+                      <div className="p-2.5 bg-blue-50 text-blue-600 rounded-full shrink-0">
+                        <FileText className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm text-gray-500 font-medium truncate metrics-card-title">Margen Promedio Realizado</p>
-                        <p className="text-2xl font-bold text-gray-800 metrics-card-value">{Math.round(statsM1.margin)}%</p>
+                        <p className="text-xs text-gray-500 font-medium truncate metrics-card-title">Margen Promedio Realizado</p>
+                        <p className="text-lg sm:text-xl font-bold text-gray-800 metrics-card-value">{Math.round(statsM1.margin)}%</p>
                       </div>
                     </div>
                   </>
