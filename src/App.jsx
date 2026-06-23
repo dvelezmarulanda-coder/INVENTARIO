@@ -865,12 +865,14 @@ export default function App() {
                 const statsPrevious = isMonthly ? statsM0 : statsY0;
                 const currentLabel = isMonthly ? formatMonthYear(selectedMonth) : `Año ${selectedYear}`;
                 const previousLabel = isMonthly ? formatMonthYear(prevMonth) : `Año ${previousYear}`;
-                const accentColor = isMonthly ? 'bg-blue-600' : 'bg-sky-600';
-                const fadeColor = isMonthly ? 'bg-blue-200' : 'bg-sky-200';
-                const profitAccent = isMonthly ? 'bg-blue-800' : 'bg-slate-700';
-                const profitFade = isMonthly ? 'bg-blue-300' : 'bg-slate-300';
-                const unitsAccent = isMonthly ? 'bg-indigo-600' : 'bg-sky-500';
-                const unitsFade = isMonthly ? 'bg-indigo-200' : 'bg-sky-200';
+                
+                // Colores de alta visibilidad y contraste (Azul Eléctrico vs Naranja Vibrante)
+                const accentColor = 'bg-blue-600';
+                const fadeColor = 'bg-orange-500';
+                const profitAccent = 'bg-blue-600';
+                const profitFade = 'bg-orange-500';
+                const unitsAccent = 'bg-blue-600';
+                const unitsFade = 'bg-orange-500';
 
                 // Datos para cada grupo de barras
                 const groups = [
@@ -938,9 +940,9 @@ export default function App() {
                           const steps = Array.from({ length: gridLines + 1 }, (_, i) => i);
 
                           return (
-                            <div className="flex flex-1 min-h-[230px] mt-2">
+                            <div className="flex w-full h-[240px] mt-4">
                               {/* Eje Y — escala */}
-                              <div className="flex flex-col justify-between items-end pr-3 shrink-0 h-full">
+                              <div className="w-16 flex flex-col justify-between items-end pr-3 shrink-0 h-full">
                                 {[...steps].reverse().map((i) => {
                                   const val = step * i;
                                   return (
@@ -1006,7 +1008,7 @@ export default function App() {
 
                         {/* Labels del eje X */}
                         <div className="flex mt-2 shrink-0">
-                          <div className="w-[80px] shrink-0" />
+                          <div className="w-16 shrink-0" />
                           <div className="flex-1 flex justify-evenly">
                             {groups.map((group) => (
                               <span key={group.label} className="text-sm font-extrabold text-gray-700">{group.label}</span>
