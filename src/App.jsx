@@ -96,6 +96,11 @@ export default function App() {
   const [isCierreModalOpen, setIsCierreModalOpen] = useState(false);
   const [productToSell, setProductToSell] = useState(null);
 
+  // Estados para la Venta en Modal
+  const [sellQuantity, setSellQuantity] = useState(1);
+  const [sellType, setSellType] = useState('');
+  const [applyIVA, setApplyIVA] = useState(false);
+
   // Filtro de historial
   const [salesFilter, setSalesFilter] = useState('Todas'); // Todas, Directa, Indirecta
 
@@ -433,6 +438,10 @@ export default function App() {
     setProducts(updatedProducts);
 
     // 2. Registrar Venta
+    const subtotal = quantity * productToSell.salePrice;
+    const ivaAmount = applyIVA ? Math.round(subtotal * 0.19) : 0;
+    const total = subtotal + ivaAmount;
+
     const newSale = {
       id: Date.now().toString(),
       productId: productToSell.id,
@@ -440,7 +449,10 @@ export default function App() {
       quantity: quantity,
       unitPrice: productToSell.salePrice,
       unitCost: productToSell.purchasePrice, // Guardar el costo de compra histórico
-      total: quantity * productToSell.salePrice,
+      subtotal: subtotal,
+      applyIVA: applyIVA,
+      ivaAmount: ivaAmount,
+      total: total,
       saleType: saleType,
       date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
       isoDate: new Date().toISOString(), // Para facilitar filtros por mes
@@ -458,6 +470,9 @@ export default function App() {
 
   const openSellModal = (product) => {
     setProductToSell(product);
+    setSellQuantity(1);
+    setSellType('');
+    setApplyIVA(false);
     setIsSellModalOpen(true);
   };
 
@@ -1638,7 +1653,18 @@ export default function App() {
                   type="number" 
                   min="1" 
                   max={productToSell.currentUnits}
-                  defaultValue="1"
+                  value={sellQuantity}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setSellQuantity('');
+                    } else {
+                      const num = parseInt(val, 10);
+                      if (!isNaN(num)) {
+                        setSellQuantity(Math.max(1, Math.min(productToSell.currentUnits, num)));
+                      }
+                    }
+                  }}
                   className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 text-lg outline-none transition" 
                 />
               </div>
@@ -1648,7 +1674,20 @@ export default function App() {
                 <label className="text-sm font-bold text-gray-800 block">Tipo de Venta:</label>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm hover:bg-gray-50 border-gray-200">
-                    <input type="radio" name="saleType" value="Directa" required className="sr-only peer" />
+                    <input 
+                      type="radio" 
+                      name="saleType" 
+                      value="Directa" 
+                      required 
+                      checked={sellType === 'Directa'}
+                      onChange={(e) => {
+                        setSellType(e.target.value);
+                        if (e.target.value === 'Directa') {
+                          setApplyIVA(true);
+                        }
+                      }}
+                      className="sr-only peer" 
+                    />
                     <div className="peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 absolute inset-0 rounded-lg border-2 border-transparent pointer-events-none"></div>
                     <div className="flex flex-col text-center w-full">
                       <span className="font-bold text-gray-900">Directa</span>
@@ -1656,12 +1695,59 @@ export default function App() {
                   </label>
 
                   <label className="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm hover:bg-gray-50 border-gray-200">
-                    <input type="radio" name="saleType" value="Indirecta" required className="sr-only peer" />
+                    <input 
+                      type="radio" 
+                      name="saleType" 
+                      value="Indirecta" 
+                      required 
+                      checked={sellType === 'Indirecta'}
+                      onChange={(e) => {
+                        setSellType(e.target.value);
+                        if (e.target.value === 'Indirecta') {
+                          setApplyIVA(false);
+                        }
+                      }}
+                      className="sr-only peer" 
+                    />
                     <div className="peer-checked:border-sky-500 peer-checked:ring-1 peer-checked:ring-sky-500 absolute inset-0 rounded-lg border-2 border-transparent pointer-events-none"></div>
                     <div className="flex flex-col text-center w-full">
                       <span className="font-bold text-gray-900">Indirecta</span>
                     </div>
                   </label>
+                </div>
+              </div>
+
+              {/* Casilla de Aplicar IVA */}
+              <div className="flex items-center space-x-3 pt-2 border-t border-gray-100">
+                <input 
+                  type="checkbox" 
+                  id="modalApplyIVA"
+                  checked={applyIVA}
+                  onChange={(e) => setApplyIVA(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                />
+                <label htmlFor="modalApplyIVA" className="text-sm font-bold text-gray-700 cursor-pointer select-none">
+                  Aplicar IVA (19%)
+                </label>
+              </div>
+
+              {/* Desglose de Precios */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2 text-sm">
+                <div className="flex justify-between text-gray-500 font-medium">
+                  <span>Subtotal ({sellQuantity || 1} unds):</span>
+                  <span>{formatCOP((sellQuantity || 1) * productToSell.salePrice)}</span>
+                </div>
+                {applyIVA && (
+                  <div className="flex justify-between text-gray-500 font-medium">
+                    <span>IVA (19%):</span>
+                    <span>{formatCOP(Math.round((sellQuantity || 1) * productToSell.salePrice * 0.19))}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-base font-black text-slate-800 border-t border-slate-200/60 pt-2">
+                  <span>Total Venta:</span>
+                  <span className="text-blue-600">
+                    {formatCOP(Math.round((sellQuantity || 1) * productToSell.salePrice * (applyIVA ? 1.19 : 1)))}
+                  </span>
                 </div>
               </div>
 
@@ -1854,6 +1940,7 @@ export default function App() {
         }, 0);
         const totalProfit = totalRevenue - totalCost;
         const totalUnits = todaysSales.reduce((acc, s) => acc + s.quantity, 0);
+        const totalIvaToday = todaysSales.reduce((acc, s) => acc + (s.ivaAmount || 0), 0);
 
         const productsSold = {};
         todaysSales.forEach(s => {
@@ -1883,16 +1970,20 @@ export default function App() {
                   <p className="text-2xl font-black text-gray-900 bg-gray-50 inline-block px-4 py-2 rounded-lg border border-gray-100">{todayDateStr}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                   <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
                     <p className="text-emerald-600 text-xs font-bold uppercase tracking-wider mb-1">Total Ventas</p>
-                    <p className="text-2xl font-black text-emerald-700">{formatCOP(totalRevenue)}</p>
+                    <p className="text-xl font-black text-emerald-700">{formatCOP(totalRevenue)}</p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 text-center">
+                    <p className="text-purple-600 text-xs font-bold uppercase tracking-wider mb-1">IVA Recaudado</p>
+                    <p className="text-xl font-black text-purple-700">{formatCOP(totalIvaToday)}</p>
                   </div>
                   <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
                     <p className="text-blue-600 text-xs font-bold uppercase tracking-wider mb-1">Ganancia Neta</p>
-                    <p className="text-2xl font-black text-blue-700">{formatCOP(totalProfit)}</p>
+                    <p className="text-xl font-black text-blue-700">{formatCOP(totalProfit)}</p>
                   </div>
-                  <div className="col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-100 text-center flex justify-center space-x-8">
+                  <div className="col-span-1 sm:col-span-3 bg-gray-50 p-4 rounded-xl border border-gray-100 text-center flex justify-center space-x-8">
                     <div>
                       <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Unidades Vendidas</p>
                       <p className="text-xl font-black text-gray-800">{totalUnits}</p>
@@ -1969,8 +2060,14 @@ export default function App() {
         <div className="border-t border-black border-dashed pt-2 space-y-1">
           <div className="flex justify-between text-sm">
             <span>Subtotal:</span>
-            <span>{formatCOP(receiptData.total)}</span>
+            <span>{formatCOP(receiptData.subtotal !== undefined ? receiptData.subtotal : receiptData.total)}</span>
           </div>
+          {receiptData.ivaAmount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span>IVA (19%):</span>
+              <span>{formatCOP(receiptData.ivaAmount)}</span>
+            </div>
+          )}
           {receiptData.laborCost > 0 && (
             <div className="flex justify-between text-sm">
               <span>Mano de Obra:</span>
@@ -2001,10 +2098,16 @@ export default function App() {
           <p className="text-sm text-gray-400 mt-1">Generado el: {new Date().toLocaleDateString()}</p>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-5 gap-4 mb-8">
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
             <p className="text-gray-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Total Ingresos</p>
             <p className="text-xl sm:text-2xl font-black text-gray-900">{formatCOP(reportData.totalRevenue)}</p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
+            <p className="text-gray-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Total IVA</p>
+            <p className="text-xl sm:text-2xl font-black text-purple-700">
+              {formatCOP(reportData.sales.reduce((acc, s) => acc + (s.ivaAmount || 0), 0))}
+            </p>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
             <p className="text-gray-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Total Costos</p>
@@ -2044,7 +2147,12 @@ export default function App() {
                   <td className="py-3 px-2 text-center text-sm">{sale.saleType}</td>
                   <td className="py-3 px-2 text-center font-medium">{sale.quantity}</td>
                   <td className="py-3 px-2 text-right text-gray-600">{formatCOP(sale.unitPrice)}</td>
-                  <td className="py-3 px-2 text-right font-bold text-gray-900">{formatCOP(sale.total)}</td>
+                  <td className="py-3 px-2 text-right font-bold text-gray-900">
+                    <div>{formatCOP(sale.total)}</div>
+                    {sale.ivaAmount > 0 && (
+                      <span className="block text-[10px] font-normal text-purple-600">Incl. IVA {formatCOP(sale.ivaAmount)}</span>
+                    )}
+                  </td>
                 </tr>
               ))
             )}
